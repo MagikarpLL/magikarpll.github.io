@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>信息系统中的统一身份认证与授权（一） | MagikarpLL的平行宇宙</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="本文主要为整个项目中的信息系统认证架构的发展与介绍，并同时给大家科普一些基础的知识点，不涉及比较深奥的技术  主要讲解知识点:  认证、授权、鉴权和权限控制 有状态与无状态 CAS单点登录协议 Oauth2.0协议  基础概念1.认证、授权、鉴权和权限控制 本章节主要内容参考的博客链接为: http:&#x2F;&#x2F;www.hyhblog.cn&#x2F;2018&#x2F;04&#x2F;25&#x2F;user_login_auth_term">
+<meta property="og:type" content="article">
+<meta property="og:title" content="信息系统中的统一身份认证与授权（一）">
+<meta property="og:url" content="https://magikarpll.com/2021/09/01/%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E7%BB%9F%E4%B8%80%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="MagikarpLL的平行宇宙">
+<meta property="og:description" content="本文主要为整个项目中的信息系统认证架构的发展与介绍，并同时给大家科普一些基础的知识点，不涉及比较深奥的技术  主要讲解知识点:  认证、授权、鉴权和权限控制 有状态与无状态 CAS单点登录协议 Oauth2.0协议  基础概念1.认证、授权、鉴权和权限控制 本章节主要内容参考的博客链接为: http:&#x2F;&#x2F;www.hyhblog.cn&#x2F;2018&#x2F;04&#x2F;25&#x2F;user_login_auth_term">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_1.PNG">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_2.PNG">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_3.PNG">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_4.PNG">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_5.jpg">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_6.png">
+<meta property="article:published_time" content="2021-09-01T15:59:11.000Z">
+<meta property="article:modified_time" content="2021-09-01T16:50:35.239Z">
+<meta property="article:author" content="MagikarpLL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://magikarpll.com/images/20200902_1.PNG">
+  
+    <link rel="alternate" href="/atom.xml" title="MagikarpLL的平行宇宙" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">MagikarpLL的平行宇宙</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">这一切都是，命运石之门的选择</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://magikarpll.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="backend-信息系统中的统一身份认证与授权（一）" class="h-entry article article-type-backend" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/09/01/%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E7%BB%9F%E4%B8%80%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/" class="article-date">
+  <time class="dt-published" datetime="2021-09-01T15:59:11.000Z" itemprop="datePublished">2021-09-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      信息系统中的统一身份认证与授权（一）
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>本文主要为整个项目中的信息系统认证架构的发展与介绍，并同时给大家科普一些基础的知识点，不涉及比较深奥的技术</p>
+</blockquote>
+<p>主要讲解知识点:</p>
+<ul>
+<li>认证、授权、鉴权和权限控制</li>
+<li>有状态与无状态</li>
+<li>CAS单点登录协议</li>
+<li>Oauth2.0协议</li>
+</ul>
+<h2 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h2><h3 id="1-认证、授权、鉴权和权限控制"><a href="#1-认证、授权、鉴权和权限控制" class="headerlink" title="1.认证、授权、鉴权和权限控制"></a>1.认证、授权、鉴权和权限控制</h3><blockquote>
+<p>本章节主要内容参考的博客链接为: <a target="_blank" rel="noopener" href="http://www.hyhblog.cn/2018/04/25/user_login_auth_terms/">http://www.hyhblog.cn/2018/04/25/user_login_auth_terms/</a> </p>
+</blockquote>
+<p>下面将简要的介绍一下信息安全领域中认证、授权、鉴权和权限控制这四个概念，并对他们之间的关系进行简要的梳理。对于现在的信息系统而言，都是由多个网站和应用组成的，如下图所示:</p>
+<p><img src="/images/20200902_1.PNG" alt="1"></p>
+<p>而在一次简单的登录流程中，我们要按顺序完成以下四个步骤: 认证、授权、鉴权和权限控制</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">用户-&gt;&gt;官网: 想看大数据的页面</span><br><span class="line">官网-&gt;&gt;用户: 你是谁?麻烦先登录</span><br><span class="line">用户-&gt;&gt;认证中心: 输入用户名密码来登录 (认证)</span><br><span class="line">认证中心-&gt;&gt;用户: 给你一个令牌 (授权)</span><br><span class="line">用户-&gt;&gt;官网: 带着令牌过来访问大数据页面</span><br><span class="line">官网-&gt;&gt;认证中心:校验令牌是真是假 (鉴权)</span><br><span class="line">认证中心-&gt;&gt;官网:令牌为真</span><br><span class="line">官网-&gt;&gt;认证中心: 这个令牌有没有访问这个页面的权限 (权限控制)</span><br><span class="line">认证中心-&gt;&gt;官网: 有权限</span><br><span class="line">官网-&gt;&gt;用户: 允许访问，返回界面</span><br></pre></td></tr></table></figure>
+<p>接下来将依次对这四个概念进行介绍:</p>
+<h4 id="1-1认证"><a href="#1-1认证" class="headerlink" title="1.1认证"></a>1.1认证</h4><p>认证是指根据声明者(用户)所特有的识别信息，确认声明者的身份。认证在英文中对应于identification这个单词。</p>
+<p>最常见的认证实现方式是通过用户名和密码，但认证方式不限于此。下面都是当前常见到的认证技术，</p>
+<ul>
+<li>身份证</li>
+<li>用户名和密码</li>
+<li>用户手机：手机短信、手机二维码扫描、手势密码</li>
+<li>用户的电子邮箱</li>
+<li>基于时间序列和用户相关的一次性口令</li>
+<li>用户的生物学特征：指纹、语音、眼睛虹膜</li>
+<li>用户的大数据识别…</li>
+</ul>
+<blockquote>
+<p>现在认证中心知道这个使用者是用户A了，但是它应该怎么告诉官网呢?</p>
+</blockquote>
+<h4 id="1-2授权"><a href="#1-2授权" class="headerlink" title="1.2授权"></a>1.2授权</h4><p>简单来说，授权一般是指获取用户的委派权限。在英文中对应于authorization这个单词。</p>
+<p>在信息安全领域，授权是指资源所有者委派执行者，赋予执行者指定范围的资源操作权限，以便执行者代理执行对资源的相关操作。这里面包含有如下四个重要概念</p>
+<blockquote>
+<p>换句人话来说，就是认证中心(资源所有者)颁发一个令牌(包含权限)给用户A正在使用的浏览器(执行者)，让这个浏览器(执行者)可以去官网拿数据（对资源执行读取操作）。这个颁发令牌的过程就是授权的一种实现方式。</p>
+</blockquote>
+<p>授权的实现方式非常多也很广泛，我们常见的银行卡、门禁卡、钥匙、公证书，这些都是现实生活中授权的实现方式。其实现方式主要通过一个共信的媒介完成，这个媒介不可被篡改。</p>
+<p>在互联网应用开发领域，授权所用到的授信媒介主要包括如下几种，</p>
+<ul>
+<li>通过web服务器的session机制，一个访问会话保持着用户的授权信息</li>
+<li>通过web浏览器的cookie机制，一个网站的cookie保持着用户的授权信息</li>
+<li>颁发授权令牌（token），一个合法有效的令牌中保持着用户的授权信息<br>前面两者常见于web开发，需要有浏览器的支持。</li>
+</ul>
+<h4 id="1-3鉴权"><a href="#1-3鉴权" class="headerlink" title="1.3鉴权"></a>1.3鉴权</h4><p>一句话概括， 鉴定你上一步颁发的令牌的真实性和有效性</p>
+<h4 id="1-4权限控制"><a href="#1-4权限控制" class="headerlink" title="1.4权限控制"></a>1.4权限控制</h4><p>一句话概括，令牌虽然是真的，但还判断你的令牌有没有权限访问这个接口</p>
+<h3 id="2-有状态与无状态"><a href="#2-有状态与无状态" class="headerlink" title="2.有状态与无状态"></a>2.有状态与无状态</h3><blockquote>
+<p>本章节推荐阅读以下博客: <a target="_blank" rel="noopener" href="https://www.cnblogs.com/shiyajian/p/10672908.html">https://www.cnblogs.com/shiyajian/p/10672908.html</a></p>
+</blockquote>
+<p>上一章节这四点，是一个系统的基石。因此接下来所有的认证权限技术方案都是围绕上面四点来设计的,而目前实现统一身份认证和授权的技术手段较多，总体可以归纳为以下两类：</p>
+<ul>
+<li>传统的 Cookie + Session 解决方案，有状态会话模式</li>
+<li>基于令牌/票据token的解决方案，无状态交互模式</li>
+</ul>
+<p>Cookie/session本质上也是一种令牌token，但cookie/session相对于令牌最大的区别的是，服务器端会为每个不同的cookie/session在服务器端保存这个用户对应的信息,服务器拿到session后，会从服务器上取出；而无状态token的用户信息是直接放在token里面的，服务器拿到token后，通过约定的解密方式，将这个token解析出来，来获取这个用户是谁。因此有状态与无状态两种模式最大的区别就在于服务端会不会保存客户端的信息。</p>
+<blockquote>
+<p>这两种模式互有优缺点，不存在哪种技术方案更好的说法。只有最适合的技术，没有最好的技术</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>无状态</th>
+<th>有状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>优点</td>
+<td>节省服务器资源，方便水平扩展，适合集群服务器，适合绝大部分设备</td>
+<td>服务器可以方便地操控用户的登录状态(踢出，拉黑)</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>服务器端难以操控用户的登录状态(踢出登录…)</td>
+<td>对服务器资源占用较多，部分设备不支持cookie/session，集群服务器中共享session不方便</td>
+</tr>
+</tbody></table>
+<p>目前比较流行的就是互联网APP中大部分采用 JWT 的认证方式，一些企业内部管理系统则大部分采用 cookie-session 的机制，原因可能如下：</p>
+<p>1、在互联网APP产品中，尤其以 to C 模式，用户量极大，为了用户体验，一般会将登录信息保留特别长时间，某些APP 只要你不卸载，那么不管几个月之后登录，账户还是处于登录状态。在这种情况下，假如采用 cookie-session 机制，那么你的用户信息保存很多个月，用户量特别大的情况下，会造成大量资源占用和浪费，这种场景采用 JWT 就是相对比较好的方案。</p>
+<p>2、企业内部管理系统有以下特点：用户量较少（最多最多不超过10W人），信息安全要求高（及时踢出客户端登录状态，个人浏览器关闭账号退出登录），在这样的场景下占用的内存不会太多，所以基于 cookie-session 这种机制，是比较好的方案，如果企业内部还有其他应用需要集成时候，需要使用 SSO Server 实现。</p>
+<h2 id="认证系统的方案发展"><a href="#认证系统的方案发展" class="headerlink" title="认证系统的方案发展"></a>认证系统的方案发展</h2><h3 id="2-基于cookie-session机制的cas-shiro方案"><a href="#2-基于cookie-session机制的cas-shiro方案" class="headerlink" title="2.基于cookie/session机制的cas + shiro方案"></a>2.基于cookie/session机制的cas + shiro方案</h3><blockquote>
+<p>项目组成立之初，系统的整体架构还是单体应用的设计方案，因此我们直接沿用了之前项目的登录方案，认证框架采用cas，授权模式为有状态的cookie/session方案，鉴权与权限控制框架为shiro</p>
+</blockquote>
+<blockquote>
+<p>单点登录的原理可以参考这篇博客: <a target="_blank" rel="noopener" href="https://www.cnblogs.com/ywlaker/p/6113927.html">https://www.cnblogs.com/ywlaker/p/6113927.html</a></p>
+</blockquote>
+<blockquote>
+<p>CAS的开发可以参考这个博客: <a target="_blank" rel="noopener" href="https://blog.csdn.net/u010475041/article/details/77886765">https://blog.csdn.net/u010475041/article/details/77886765</a></p>
+</blockquote>
+<p>而我们这套框架的核心就是CAS，接下来用一句话介绍CAS:<br>CAS （ Central Authentication Service ） 是 Yale 大学发起的一个企业级的、开源的项目，旨在为 Web 应用系统提供一种可靠的单点登录解决方法。</p>
+<p>CAS 单点登录的整体流程可以通过以下一张图来描述清楚:<br><img src="/images/20200902_2.PNG" alt="2"></p>
+<p>CAS为认证专门设计了几种令牌票据，ST TGC TGT，只要理解了这些票据，整个CAS就不难理解了:</p>
+<ul>
+<li>TGT</li>
+</ul>
+<p>TGT 是CAS-server  为用户签发的登录 ticket，也是用于验证用户登录成功的唯一方式。 TGT 封装了 Cookie 值以及 Cookie 值对应的用户信息，CAS 通过 Cookie 值（TGC）为 key 查询缓存中有无 TGT（TGC:TGT（key:value）），如果有的话就说明用户已经登录了cas-server，无须重复登录。</p>
+<ul>
+<li>TGC  </li>
+</ul>
+<p>CAS-server 会将生成的 TGT 放在 session 中，而 TGC 就是这个 session 的唯一标识(sessionId)，可以认为是 TGT 的key，为 TGT 就是 TGC 的 value，TGC 以 cookie 的形式保存在浏览器中，每个请求都会尝试携带 TGC。（每个服务都会在 session 和 cookie 中保存对应的 TGT 和 TGC）</p>
+<ul>
+<li>ST</li>
+</ul>
+<p>ST 是当用户访问某一服务时提供的 ticket。用户在访问其他服务时，发现没有 cookie 或 ST ，那么就会重定向到 CAS 服务器获取 ST。然后会携带着 ST 重定向 回来。</p>
+<hr>
+<p>因此，我们可以发现，作为一个PC端的单点登录框架，CAS是完美的满足了我们的需求，并且提供了较高的安全性。但是随着移动端和宏天接入了我们的系统，并且我们准备采用微服务架构后，就没那么完美了，因为原来的这套架构会带来以下几个无法避免的问题:</p>
+<ul>
+<li>移动端使用cookie/session很不方便</li>
+<li>宏天是无状态的微服务架构，采用的是jwt token来认证，与我们现有的有状态cookie/session互不兼容</li>
+<li>微服务架构下使用session很不方便,虽然分布式 Session 可以解决这个问题，但因其状态化通信的特性与微服务提倡的API导向无状态通信相互违背，且共享式存储存在安全隐患，因此微服务一般不太采用</li>
+</ul>
+<blockquote>
+<p>其实新版本的cas也是支持无状态token和oauth2.0协议的，只是我们之前使用的cas是4.3版本的，太老了</p>
+</blockquote>
+<h3 id="3-基于无状态token的oauth2-0-jwt-spring-security方案"><a href="#3-基于无状态token的oauth2-0-jwt-spring-security方案" class="headerlink" title="3.基于无状态token的oauth2.0+jwt+spring-security方案"></a>3.基于无状态token的oauth2.0+jwt+spring-security方案</h3><blockquote>
+<p>因此基于以上几个原因，我们将整个项目组的登录架构升级为了以下方案: 认证协议采用oauth2.0，授权模式为无状态的票据token方案，鉴权与权限控制框架为spring-security</p>
+</blockquote>
+<blockquote>
+<p>oauth2.0推荐参考以下链接: <a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html">理解OAuth 2.0</a> 和 <a target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2019/04/oauth_design.html">OAuth 2.0 的一个简单解释</a> 和 <a target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2019/04/oauth-grant-types.html">OAuth 2.0 的四种方式</a></p>
+</blockquote>
+<p>而我们这套框架的核心协议就是Oauth2.0协议，一句话介绍它:<br>简单说，OAuth 就是一种授权机制。数据的所有者告诉系统，同意授权第三方应用进入系统，获取这些数据。系统从而产生一个短期的进入令牌（token），用来代替密码，供第三方应用使用。</p>
+<p>Oauth2.0的核心就只是向第三方应用颁发令牌，但由于现在的互联网有多种场景，因此它为这些场景规定了四种统一的标准流程。 分别是:</p>
+<ul>
+<li>授权码（authorization-code）</li>
+<li>隐藏式（implicit）</li>
+<li>密码式（password）</li>
+<li>客户端凭证（client credentials）</li>
+</ul>
+<p>因此理解oauth2.0的前提就是理解这四种流程，我在开发这套框架的时候就发生了因为理解有误，导致采用错了流程，最后走了弯路的情况。</p>
+<h4 id="授权码模式"><a href="#授权码模式" class="headerlink" title="授权码模式"></a>授权码模式</h4><p>授权码（authorization code）方式，指的是第三方应用先申请一个授权码，然后再用该码获取令牌。</p>
+<p>这种方式是最常用的流程，大家日常生活中肯定用过，安全性也最高，它适用于那些有后端的 Web 应用。授权码通过前端传送，令牌则是储存在后端，而且所有与资源服务器的通信都在后端完成。这样的前后端分离，可以避免令牌泄漏。</p>
+<p>下为具体例子,假如我要登录gitee网站，但是没有账号又不想注册: </p>
+<ul>
+<li>第一步, gitee 网站提供一个链接，用户点击后就会跳转到微信登录页面，授权用户数据给gitee网站使用</li>
+</ul>
+<p><img src="/images/20200902_3.PNG" alt="3"></p>
+<p><img src="/images/20200902_4.PNG" alt="4"></p>
+<p>下面就是gitee网站跳转微信的一个示意链接:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">https://open.weixin.qq.com/connect/qrconnect?</span><br><span class="line">appid=wx63d402790645b7e6&amp;</span><br><span class="line">redirect_uri=https%3A%2F%2Fgitee.com%2Fauth%2Fwechat%2Fcallback&amp;</span><br><span class="line">response_type=code&amp;</span><br><span class="line">scope=snsapi_login</span><br><span class="line">&amp;state=9d90ceb6b3ad0a633a0085541ad024d18bcc96004b20c2a5#wechat_redirect</span><br></pre></td></tr></table></figure>
+<p>而标准的oauth2.0跳转链接为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">https://b.com/oauth/authorize?</span><br><span class="line">  response_type=code&amp;</span><br><span class="line">  client_id=CLIENT_ID&amp;</span><br><span class="line">  redirect_uri=CALLBACK_URL&amp;</span><br><span class="line">  scope=read</span><br></pre></td></tr></table></figure>
+
+<p>上面 URL 中，response_type参数表示要求返回授权码（code），client_id参数让 B 知道是谁在请求，redirect_uri参数是 B 接受或拒绝请求后的跳转网址，scope参数表示要求的授权范围（这里是只读）。</p>
+<ul>
+<li>第二步，用户跳转后，微信会要求用户登录，然后询问用户是否同意给予 gitee 网站授权。</li>
+</ul>
+<p><img src="/images/20200902_5.jpg" alt="5"></p>
+<p>用户表示同意，这时 微信 网站就会跳回redirect_uri参数指定的网址。跳转时，会传回一个授权码，就像下面这样。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://a.com/callback?code=AUTHORIZATION_CODE</span><br></pre></td></tr></table></figure>
+<p>上面 URL 中，code参数就是授权码。</p>
+<ul>
+<li>第三步，gitee网站拿到授权码以后，就可以在后端，向微信请求令牌。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">https://b.com/oauth/token?</span><br><span class="line"> client_id=CLIENT_ID&amp;</span><br><span class="line"> client_secret=CLIENT_SECRET&amp;</span><br><span class="line"> grant_type=authorization_code&amp;</span><br><span class="line"> code=AUTHORIZATION_CODE&amp;</span><br><span class="line"> redirect_uri=CALLBACK_URL</span><br></pre></td></tr></table></figure>
+<p>上面 URL 中，client_id参数和client_secret参数用来让 B确认 A 的身份（client_secret参数是保密的，因此只能在后端发请求），grant_type参数的值是AUTHORIZATION_CODE，表示采用的授权方式是授权码，code参数是上一步拿到的授权码，redirect_uri参数是令牌颁发后的回调网址。</p>
+<ul>
+<li>第四步，微信收到请求以后，就会颁发令牌。具体做法是向redirect_uri指定的网址，发送一段 JSON 数据。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#123;    </span><br><span class="line">  &quot;access_token&quot;:&quot;ACCESS_TOKEN&quot;,</span><br><span class="line">  &quot;token_type&quot;:&quot;bearer&quot;,</span><br><span class="line">  &quot;expires_in&quot;:2592000,</span><br><span class="line">  &quot;refresh_token&quot;:&quot;REFRESH_TOKEN&quot;,</span><br><span class="line">  &quot;scope&quot;:&quot;read&quot;,</span><br><span class="line">  &quot;uid&quot;:100101,</span><br><span class="line">  &quot;info&quot;:&#123;...&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这时候gitee的后端就可以拿着这个access_token来访问微信的接口，获取你的信息。整个授权码模式就结束了</p>
+<blockquote>
+<p>通常情况下，第三方应用还会弹出以下界面来让你将微信的个人信息绑定到它的系统中的账号里，这块并不属于oauth2.0的标准流程，是应用自己添加的,这时候第三方应用其实已经拿到了你的微信账号信息。如下图所示:<br><img src="/images/20200902_6.png" alt="6"></p>
+</blockquote>
+<p>==通过上面的流程，我们不难发现授权码模式主要适用于第三方应用接入你的系统的模式，它的安全性也是非常搞的，敏感信息都是通过后端来调用的，对前端可见的都是不敏感的或者快速失效的信息，并且对于权限粒度的控制也是很好的，就像gitee刚刚申请的那个令牌，就只能获取我的账号信息而已，那个token是没有权限访问其他的信息的==</p>
+<h4 id="密码式"><a href="#密码式" class="headerlink" title="密码式"></a>密码式</h4><p>如果你高度信任某个应用，用户也可以把用户名和密码，直接告诉该应用。该应用就使用你的密码，调用接口申请令牌，这种方式称为”密码式”（password）。</p>
+<p>==这种模式只适用于自己系统内的应用，比如我们现在信息系统内的所有应用 pubs, bms, 移动端都是使用这种模式来获取令牌的。绝对不能给第三方应用使用这种模式==</p>
+<h4 id="凭证式和隐藏式"><a href="#凭证式和隐藏式" class="headerlink" title="凭证式和隐藏式"></a>凭证式和隐藏式</h4><p>这两种模式其实是很相似的。</p>
+<p>隐藏式适合那些纯前端的应用，它们没有后端，必须将令牌储存在前端，因此只能直接将令牌颁发给前端，这种模式是很不安全的。因此，只能用于一些安全要求不高的场景，并且令牌的有效期必须非常短，通常就是会话期间（session）有效，浏览器关掉，令牌就失效了</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">https://oauth.b.com/token?</span><br><span class="line">  grant_type=password&amp;</span><br><span class="line">  username=USERNAME&amp;</span><br><span class="line">  password=PASSWORD&amp;</span><br><span class="line">  client_id=CLIENT_ID</span><br></pre></td></tr></table></figure>
+
+<p>凭证式适用于没有前端的纯后端应用，也就是后端直接向认证中心申请令牌，而这种方式给出的令牌，是针对第三方应用的，而不是针对用户的，即有可能多个用户共享同一个令牌。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">https://oauth.b.com/token?</span><br><span class="line">  grant_type=client_credentials&amp;</span><br><span class="line">  client_id=CLIENT_ID&amp;</span><br><span class="line">  client_secret=CLIENT_SECRET</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>==注意，不管哪一种授权方式，第三方应用申请令牌之前，都必须先到系统备案，说明自己的身份，然后会拿到两个身份识别码：客户端 ID（client ID）和客户端密钥（client secret）。这是为了防止令牌被滥用，没有备案过的第三方应用，是不会拿到令牌的==</p>
+<hr>
+<p>授权码模式是oauth2.0四种模式中使用最为广泛也是最安全最复杂的一种，其他三种模式相对来说都偏少一些，只要我们理解了上面四种模式，然后知道它们分别适用于哪些场景，那么oauth2.0对大家来说也就没什么难处的了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本次分享中主要讲解了以下概念:</p>
+<ul>
+<li>认证、授权、鉴权和权限控制</li>
+<li>有状态与无状态</li>
+<li>CAS单点登录协议</li>
+<li>Oauth2.0协议</li>
+</ul>
+<p>当然认证与授权并不只有这些概念，还有cookie/session的实现原理，无状态令牌的实现方式(jwt)，以及鉴权框架shiro，spring-security的区别等等这些更为具体的开发知识。但是了解上述的这些概念，已经能对整个系统的架构设计与方案有一个大体的了解了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://magikarpll.com/2021/09/01/%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E7%BB%9F%E4%B8%80%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/" data-id="ckt1qkavy00090cvrg26qgfe9" data-title="信息系统中的统一身份认证与授权（一）" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/09/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E4%B9%8Bspring-security-oauth%EF%BC%88%E4%BA%8C%EF%BC%89/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          微服务认证方案设计之spring-security-oauth（二）
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/08/17/%E5%B7%A5%E4%BD%9C%E5%87%86%E5%A4%87/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">工作准备</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">August 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/09/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E4%B9%8Bspring-security-oauth%EF%BC%88%E4%BA%8C%EF%BC%89/">微服务认证方案设计之spring-security-oauth（二）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/09/01/%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E7%BB%9F%E4%B8%80%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/">信息系统中的统一身份认证与授权（一）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/17/%E5%B7%A5%E4%BD%9C%E5%87%86%E5%A4%87/">工作准备</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/17/%E4%BA%8C%E5%8D%81%E4%B8%8D%E6%83%91/">二十不惑</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/17/%E5%86%99%E5%9C%A82020%E5%B9%B4%E7%9A%84%E8%AF%9D/">写在2020年的话</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 MagikarpLL<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

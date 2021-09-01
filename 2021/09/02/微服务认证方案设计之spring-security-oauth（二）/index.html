@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>微服务认证方案设计之spring-security-oauth（二） | MagikarpLL的平行宇宙</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="上一章节中，我们介绍了大体的概念。这一章节将主要讲解oauth2.0 + jwt + spring security的开发知识  整体技术框架 认证中心（授权服务器）: spring security oauth 2.1.2.RELEASE 鉴权框架: spring security 5.3.8.RELEASE 认证协议: oauth2.0 无状态令牌: jwt  认证中心框架选择方案一: 升级">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务认证方案设计之spring-security-oauth（二）">
+<meta property="og:url" content="https://magikarpll.com/2021/09/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E4%B9%8Bspring-security-oauth%EF%BC%88%E4%BA%8C%EF%BC%89/index.html">
+<meta property="og:site_name" content="MagikarpLL的平行宇宙">
+<meta property="og:description" content="上一章节中，我们介绍了大体的概念。这一章节将主要讲解oauth2.0 + jwt + spring security的开发知识  整体技术框架 认证中心（授权服务器）: spring security oauth 2.1.2.RELEASE 鉴权框架: spring security 5.3.8.RELEASE 认证协议: oauth2.0 无状态令牌: jwt  认证中心框架选择方案一: 升级">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_7.png">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_8.png">
+<meta property="og:image" content="https://magikarpll.com/images/20200902_9.png">
+<meta property="article:published_time" content="2021-09-01T16:46:39.000Z">
+<meta property="article:modified_time" content="2021-09-01T16:50:33.149Z">
+<meta property="article:author" content="MagikarpLL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://magikarpll.com/images/20200902_7.png">
+  
+    <link rel="alternate" href="/atom.xml" title="MagikarpLL的平行宇宙" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">MagikarpLL的平行宇宙</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">这一切都是，命运石之门的选择</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://magikarpll.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="backend-微服务认证方案设计之spring-security-oauth（二）" class="h-entry article article-type-backend" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/09/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E4%B9%8Bspring-security-oauth%EF%BC%88%E4%BA%8C%EF%BC%89/" class="article-date">
+  <time class="dt-published" datetime="2021-09-01T16:46:39.000Z" itemprop="datePublished">2021-09-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      微服务认证方案设计之spring-security-oauth（二）
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>上一章节中，我们介绍了大体的概念。这一章节将主要讲解oauth2.0 + jwt + spring security的开发知识</p>
+</blockquote>
+<h2 id="整体技术框架"><a href="#整体技术框架" class="headerlink" title="整体技术框架"></a>整体技术框架</h2><ul>
+<li>认证中心（授权服务器）: spring security oauth 2.1.2.RELEASE</li>
+<li>鉴权框架: spring security 5.3.8.RELEASE</li>
+<li>认证协议: oauth2.0</li>
+<li>无状态令牌: jwt</li>
+</ul>
+<h3 id="认证中心框架选择"><a href="#认证中心框架选择" class="headerlink" title="认证中心框架选择"></a>认证中心框架选择</h3><h4 id="方案一-升级现有的cas4-3至cas6-x版本"><a href="#方案一-升级现有的cas4-3至cas6-x版本" class="headerlink" title="方案一: 升级现有的cas4.3至cas6.x版本:"></a>方案一: 升级现有的cas4.3至cas6.x版本:</h4><p>总体上来说,6.x版本cas从功能上来说是满足我们的要求的，但是cas6.x有以下不足，让我最终放弃了使用它:</p>
+<ul>
+<li>采用了gradle作为包管理器，而项目组现在只用maven，</li>
+<li>6.x版本的cas将包拆分的过于细了，导致阅读与寻找源码并不方便，</li>
+<li>cas6.x官方并不推荐也不支持你去修改它的登录流程，自定义流程太麻烦了</li>
+</ul>
+<p>综上，cas6.x适合那些登录流程简单较为固定，需要开箱即用的项目，不适合那些需要自定义修改很多内容的项目。对于企业应用来说，它推荐的使用方式是war包overlay部署方式，里面强塞了太多不需要的东西，太沉重了</p>
+<p>还有一点，6.x版本的cas中文文档与博客极少，遇到问题只能看源码，比较痛苦。</p>
+<h4 id="方案二-采用spring-security-oauth"><a href="#方案二-采用spring-security-oauth" class="headerlink" title="方案二: 采用spring-security-oauth"></a>方案二: 采用spring-security-oauth</h4><p>虽然spring-security-oauth已经进入了维护阶段，后续官方将废弃该项目，现在spring官方已经将spring-security-oauth中的大部分功能(除了认证服务器)合并入了spring-security中统一管理，后续官方将为认证服务器单独推出一个全新的项目: <a target="_blank" rel="noopener" href="https://github.com/spring-projects-experimental/spring-authorization-server">spring-authorization-server</a>。它目前还处于实验阶段，所以不敢采用。</p>
+<p>而spring-security-oauth作为认证中心，虽然已经进入了停止更新状态，但官方依然会维护一段时间。并且作为一个很成熟的spring框架，它预留了很多的方法来供我们自定义，修改起来非常方便。并且设计上也很简单清爽，便于阅读，中文文档和博客也是很多的，所以我采用了这个框架作为我们的认证中心。</p>
+<h3 id="鉴权框架选择"><a href="#鉴权框架选择" class="headerlink" title="鉴权框架选择"></a>鉴权框架选择</h3><p>shiro 和 spring-security在功能上都是很好的框架，但Shiro 最大的问题在于和 Spring 家族的产品进行整合的时候非常不便，对比之下，虽然spring-security相对Shiro会复杂很多,但基于 Spring Boot/Spring Cloud 的微服务项目基本上是原生支持spring-security的，对接起来非常方便。因此选择spring-security。</p>
+<h3 id="认证协议与令牌方案"><a href="#认证协议与令牌方案" class="headerlink" title="认证协议与令牌方案"></a>认证协议与令牌方案</h3><p>oauth2.0+jwt, oauth2.0只是一种认证协议，具体的令牌方案目前最流行的就是自解析的jwt，很适合微服务方案。</p>
+<blockquote>
+<p>问题:  假如微服务框架使用非自解析的令牌，相对于jwt有什么优势又有什么劣势呢?</p>
+</blockquote>
+<hr>
+<p>==优势: 安全性更高，对令牌的控制更方便   劣势: 后端服务器压力大，一次认证流程中会有更多的http请求== </p>
+<h2 id="具体技术讲解"><a href="#具体技术讲解" class="headerlink" title="具体技术讲解"></a>具体技术讲解</h2><blockquote>
+<p>oauth2.0与jwt非常简单，这里就不仔细讲了。主要说一下认证中心与鉴权框架。</p>
+</blockquote>
+<h3 id="demo演示-几种模式及其参数解释"><a href="#demo演示-几种模式及其参数解释" class="headerlink" title="demo演示(几种模式及其参数解释)"></a>demo演示(几种模式及其参数解释)</h3><blockquote>
+<p>这里推荐一个个人认为很好的demo, <a target="_blank" rel="noopener" href="https://gitee.com/copoile/springcloud-oauth2">地址如下</a></p>
+</blockquote>
+<p>这个项目拉下来直接就可以跑，不需要配置任何数据库，按照readme中的提示一步步跑起来，然后主要要体会一下它的几种模式的调用和弄清楚它各个模式里面的参数都代表什么意思，代码原理倒不怎么用看</p>
+<ul>
+<li>密码模式</li>
+</ul>
+<p>密码模式请求的是 /oauth/token 这个接口，一共有五个参数：  </p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>位置</th>
+<th>作用</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>username</td>
+<td>Authorization中Type为Basic Auth的username选项</td>
+<td>对应于oauth服务端中注册好的clientId</td>
+<td>无论是哪个客户端接入都必须提前注册clientId和clientSecret</td>
+</tr>
+<tr>
+<td>password</td>
+<td>Authorization中Type为Basic Auth的password选项</td>
+<td>对应于oauth服务端中注册好的clientSecret</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>username</td>
+<td>Body中</td>
+<td>用户名</td>
+<td>无</td>
+</tr>
+<tr>
+<td>password</td>
+<td>Body中</td>
+<td>密码</td>
+<td>无</td>
+</tr>
+<tr>
+<td>grant_type</td>
+<td>Body中</td>
+<td>授权类型</td>
+<td>这个参数决定你调用的是哪种模式，密码模式为password</td>
+</tr>
+</tbody></table>
+<ul>
+<li>授权码模式</li>
+</ul>
+<p>第一步，浏览器访问这个地址 <a target="_blank" rel="noopener" href="http://localhost:8001/oauth/authorize?response_type=code&amp;scope=sever&amp;client_id=yaohw&amp;redirect_uri=http://www.baidu.com&amp;state=0583">http://localhost:8001/oauth/authorize?response_type=code&amp;scope=sever&amp;client_id=yaohw&amp;redirect_uri=http://www.baidu.com&amp;state=0583</a> 然后会重定向到登录页</p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>response_type</td>
+<td>授权码模式固定为code</td>
+</tr>
+<tr>
+<td>scope</td>
+<td>请求的token的作用范围</td>
+</tr>
+<tr>
+<td>client_id</td>
+<td>在oauth2认证中心注册的客户端Id</td>
+</tr>
+<tr>
+<td>redirect_uri</td>
+<td>登录成功后的重定向地址，该地址必须与在oauth2认证中心注册的重定向地址完全一致</td>
+</tr>
+<tr>
+<td>state</td>
+<td>自定义参数，忽略</td>
+</tr>
+</tbody></table>
+<p>第二步，在页面输入用户名和密码，就会带着授权码?code=xxx跳转到上面哪个地址，将授权码拷贝下来</p>
+<p>第三步，post访问<a target="_blank" rel="noopener" href="http://localhost:8001/oauth/token,%E5%8F%82%E6%95%B0%E5%A6%82%E4%B8%8B">http://localhost:8001/oauth/token,参数如下</a></p>
+<blockquote>
+<p>访问/oauth/token时候，请求头Authorization中都必须配置Type为Basic Auth,然后将clientId和clientSecret设入，后面就不讲解这个了</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>grant_type</td>
+<td>这里对应获取token的模式，授权码模式必须为authorization_code</td>
+</tr>
+<tr>
+<td>code</td>
+<td>上一步获取的授权码</td>
+</tr>
+<tr>
+<td>redirect_uri</td>
+<td>登录成功后的重定向地址，该地址必须与在oauth2认证中心注册的重定向地址完全一致</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>下面三种模式就不多说了，你们可以仔细观察下调用的几个接口的区别，可以发现以下几点区别</p>
+</blockquote>
+<p>只要是前端页面跳转，都是调用<a target="_blank" rel="noopener" href="http://localhost:8001/oauth/authorize?response_type=%E8%BF%99%E4%B8%AA%E5%9C%B0%E5%9D%80%EF%BC%8C%E5%B9%B6%E4%B8%94%E6%98%AF%E9%80%9A%E8%BF%87response_type%E8%BF%99%E4%B8%AA%E5%8F%82%E6%95%B0%E6%9D%A5%E5%8C%BA%E5%88%86%E6%A8%A1%E5%BC%8F">http://localhost:8001/oauth/authorize?response_type=这个地址，并且是通过response_type这个参数来区分模式</a></p>
+<p>而如果是后端接口调用，则是通过<a target="_blank" rel="noopener" href="http://localhost:8001/oauth/token%E8%BF%99%E4%B8%AA%E6%8E%A5%E5%8F%A3%E6%9D%A5%E8%B0%83%E7%94%A8%EF%BC%8C%E5%B9%B6%E4%B8%94%E9%80%9A%E8%BF%87grant_type%E8%BF%99%E4%B8%AA%E5%AD%97%E6%AE%B5%E6%9D%A5%E5%8C%BA%E5%88%86%E6%A8%A1%E5%BC%8F%EF%BC%8C%E5%B9%B6%E4%B8%94%E4%B8%80%E5%AE%9A%E5%B8%A6%E6%9C%89clientId%E5%92%8CclientSecret">http://localhost:8001/oauth/token这个接口来调用，并且通过grant_type这个字段来区分模式，并且一定带有clientId和clientSecret</a></p>
+<ul>
+<li>自定义手机验证码模式（这个可以忽略，需要搞redis,是作者自定义的，不嫌麻烦也可以试下）</li>
+<li>简化模式</li>
+<li>刷token模式</li>
+</ul>
+<h4 id="从接口开始走一遍各个模式的流程"><a href="#从接口开始走一遍各个模式的流程" class="headerlink" title="从接口开始走一遍各个模式的流程"></a>从接口开始走一遍各个模式的流程</h4><blockquote>
+<p>因为上面我们发现oauth2.0的四种模式，其实就对应着两个地址/token和/authorize.因此接下来，我们就过一下着两个url对应的入口TokenEndpoint和AuthorizationEndpoint</p>
+</blockquote>
+<h5 id="AuthorizationEndpoint"><a href="#AuthorizationEndpoint" class="headerlink" title="AuthorizationEndpoint"></a>AuthorizationEndpoint</h5><p>对应认证码模式和纯前端的简化模式，具体实现类为org.springframework.security.oauth2.provider.endpoint.AuthorizationEndpoint</p>
+<p>总体入口在122行的authorize方法这里，下面我会把没用的代码都删掉，通过注释带大家看一遍这个方法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line">@RequestMapping(value = &quot;/oauth/authorize&quot;)</span><br><span class="line">	public ModelAndView authorize(Map&lt;String, Object&gt; model, @RequestParam Map&lt;String, String&gt; parameters,</span><br><span class="line">			SessionStatus sessionStatus, Principal principal) &#123;</span><br><span class="line">		</span><br><span class="line">		//通过工厂类将参数包裹为authorizationRequest</span><br><span class="line">		AuthorizationRequest authorizationRequest = getOAuth2RequestFactory().createAuthorizationRequest(parameters);</span><br><span class="line"></span><br><span class="line">        //校验该方法中的response_type参数</span><br><span class="line">		Set&lt;String&gt; responseTypes = authorizationRequest.getResponseTypes();</span><br><span class="line">		if (!responseTypes.contains(&quot;token&quot;) &amp;&amp; !responseTypes.contains(&quot;code&quot;)) &#123;</span><br><span class="line">			throw new UnsupportedResponseTypeException(&quot;Unsupported response types: &quot; + responseTypes);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">        //校验是否提供clientId</span><br><span class="line">		if (authorizationRequest.getClientId() == null) &#123;</span><br><span class="line">			throw new InvalidClientException(&quot;A client id must be provided&quot;);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		try &#123;</span><br><span class="line"></span><br><span class="line">            /**</span><br><span class="line">            这里非常重要！！！假如这里你没有登录，这里会直接抛出AuthenticationException,</span><br><span class="line">            而这个异常会被过滤器链filterChain上的spring security 专用的异常处理过滤器捕捉，</span><br><span class="line">            对应的是org.springframework.security.web.access.ExceptionTranslationFilter的105行</span><br><span class="line">            的handleSpringSecurityException这个方法,捕捉后根据不同的实现类</span><br><span class="line">            spring会执行不同的操作，对应于认证码模式，它就会重定向走</span><br><span class="line">            </span><br><span class="line">            因此假如你的项目有全局异常处理器，这里一定要记得不要去捕捉所有异常，如果</span><br><span class="line">            把spring security的异常捕捉了，就会产生意料外的缺陷</span><br><span class="line">            **/</span><br><span class="line">			if (!(principal instanceof Authentication) || !((Authentication) principal).isAuthenticated()) &#123;</span><br><span class="line">				throw new InsufficientAuthenticationException(</span><br><span class="line">						&quot;User must be authenticated with Spring Security before authorization can be completed.&quot;);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">            //这里通过用户传来的clientId去后端查这个客户端的信息，至于具体是去哪里查，</span><br><span class="line">            //依赖于用户具体的service实现方式是jdbc还是redis</span><br><span class="line">			ClientDetails client = getClientDetailsService().loadClientByClientId(authorizationRequest.getClientId());</span><br><span class="line"></span><br><span class="line">			//解析并判断redirect_uri中指定的参数是否与后端配置的一样</span><br><span class="line">			String redirectUriParameter = authorizationRequest.getRequestParameters().get(OAuth2Utils.REDIRECT_URI);</span><br><span class="line">			String resolvedRedirect = redirectResolver.resolveRedirect(redirectUriParameter, client);</span><br><span class="line">			if (!StringUtils.hasText(resolvedRedirect)) &#123;</span><br><span class="line">				throw new RedirectMismatchException(</span><br><span class="line">						&quot;A redirectUri must be either supplied or preconfigured in the ClientDetails&quot;);</span><br><span class="line">			&#125;</span><br><span class="line">			authorizationRequest.setRedirectUri(resolvedRedirect);</span><br><span class="line"></span><br><span class="line">			//检查scope参数是否与后端配置的一样</span><br><span class="line">			oauth2RequestValidator.validateScope(authorizationRequest, client);</span><br><span class="line"></span><br><span class="line">		    //这里是用来判断当你采用认证码模式时，跳转过去后，是否需要自动批准第三方客户端使用你的某些信息</span><br><span class="line">			authorizationRequest = userApprovalHandler.checkForPreApproval(authorizationRequest,</span><br><span class="line">					(Authentication) principal);</span><br><span class="line">			boolean approved = userApprovalHandler.isApproved(authorizationRequest, (Authentication) principal);</span><br><span class="line">			authorizationRequest.setApproved(approved);</span><br><span class="line"></span><br><span class="line">			//假如你点了批准或者设置为默认批准</span><br><span class="line">			if (authorizationRequest.isApproved()) &#123;</span><br><span class="line">			    //如果你的response_type是token,则这里直接返回token给前端</span><br><span class="line">				if (responseTypes.contains(&quot;token&quot;)) &#123;</span><br><span class="line">					return getImplicitGrantResponse(authorizationRequest);</span><br><span class="line">				&#125;</span><br><span class="line">				//response_type为code，这里生成code后，return一个重定向的modelAndView完成跳转</span><br><span class="line">				if (responseTypes.contains(&quot;code&quot;)) &#123;</span><br><span class="line">					return new ModelAndView(getAuthorizationCodeResponse(authorizationRequest,</span><br><span class="line">							(Authentication) principal));</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			// Store authorizationRequest AND an immutable Map of authorizationRequest in session</span><br><span class="line">			// which will be used to validate against in approveOrDeny()</span><br><span class="line">			model.put(AUTHORIZATION_REQUEST_ATTR_NAME, authorizationRequest);</span><br><span class="line">			model.put(ORIGINAL_AUTHORIZATION_REQUEST_ATTR_NAME, unmodifiableMap(authorizationRequest));</span><br><span class="line"></span><br><span class="line">			return getUserApprovalPageResponse(model, authorizationRequest, (Authentication) principal);</span><br><span class="line">		&#125;</span><br><span class="line">		catch (RuntimeException e) &#123;</span><br><span class="line">			sessionStatus.setComplete();</span><br><span class="line">			throw e;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>总结一下，这个方法对登录和未登录的访问会进行以下两种处理流程: </p>
+<ul>
+<li>假如你是未登录来访问这个接口，那么会抛出异常，被ExceptionTranslationFilter捕获，调用handleSpringSecurityException方法，进入sendStartAuthentication方法，假如你配置的是重定向地址，他这里应该就会找到这个LoginUrlAuthenticationEntryPoint，给个重定向到登录页，让你登录。</li>
+<li>当你登录server之后，再进这里就是已登录状态了，就直接过去了，然后给你生成code重定向走</li>
+</ul>
+<h5 id="TokenEndpoint"><a href="#TokenEndpoint" class="headerlink" title="TokenEndpoint"></a>TokenEndpoint</h5><p>对应密码模式和纯后端的client_credentials模式以及拿着code请求token的认证码模式的第二步，具体实现类为org.springframework.security.oauth2.provider.endpoint.TokenEndpoint</p>
+<p>总体入口在87行的postAccessToken方法这里，下面我会把没用的代码都删掉，通过注释带大家看一遍这个方法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">@RequestMapping(value = &quot;/oauth/token&quot;, method=RequestMethod.POST)</span><br><span class="line">	public ResponseEntity&lt;OAuth2AccessToken&gt; postAccessToken(Principal principal, @RequestParam</span><br><span class="line">	Map&lt;String, String&gt; parameters) throws HttpRequestMethodNotSupportedException &#123;</span><br><span class="line"></span><br><span class="line">        //在到达这个入口之前，UsernamePasswordAuthenticationFilter会</span><br><span class="line">        //把Authorization头中的clientId和clientSecret取出来，放到principal中。</span><br><span class="line">		//因此下面这段主要是对clientId和clientSecret进行校验</span><br><span class="line">		if (!(principal instanceof Authentication)) &#123;</span><br><span class="line">			throw new InsufficientAuthenticationException(</span><br><span class="line">					&quot;There is no client authentication. Try adding an appropriate authentication filter.&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		String clientId = getClientId(principal);</span><br><span class="line">		ClientDetails authenticatedClient = getClientDetailsService().loadClientByClientId(clientId);</span><br><span class="line"></span><br><span class="line">		TokenRequest tokenRequest = getOAuth2RequestFactory().createTokenRequest(parameters, authenticatedClient);</span><br><span class="line"></span><br><span class="line">		if (clientId != null &amp;&amp; !clientId.equals(&quot;&quot;)) &#123;</span><br><span class="line">			// Only validate the client details if a client authenticated during this</span><br><span class="line">			// request.</span><br><span class="line">			if (!clientId.equals(tokenRequest.getClientId())) &#123;</span><br><span class="line">				//如果不相等或者没找到，则直接抛出异常</span><br><span class="line">				throw new InvalidClientException(&quot;Given client ID does not match authenticated client&quot;);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		//校验scope是否匹配</span><br><span class="line">		if (authenticatedClient != null) &#123;</span><br><span class="line">			oAuth2RequestValidator.validateScope(tokenRequest, authenticatedClient);</span><br><span class="line">		&#125;</span><br><span class="line">		//下面都是校验各种参数</span><br><span class="line">		if (!StringUtils.hasText(tokenRequest.getGrantType())) &#123;</span><br><span class="line">			throw new InvalidRequestException(&quot;Missing grant type&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		if (tokenRequest.getGrantType().equals(&quot;implicit&quot;)) &#123;</span><br><span class="line">			throw new InvalidGrantException(&quot;Implicit grant type not supported from token endpoint&quot;);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if (isAuthCodeRequest(parameters)) &#123;</span><br><span class="line">			// The scope was requested or determined during the authorization step</span><br><span class="line">			if (!tokenRequest.getScope().isEmpty()) &#123;</span><br><span class="line">				logger.debug(&quot;Clearing scope of incoming token request&quot;);</span><br><span class="line">				tokenRequest.setScope(Collections.&lt;String&gt; emptySet());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if (isRefreshTokenRequest(parameters)) &#123;</span><br><span class="line">			// A refresh token has its own default scopes, so we should ignore any added by the factory here.</span><br><span class="line">			tokenRequest.setScope(OAuth2Utils.parseParameterList(parameters.get(OAuth2Utils.SCOPE)));</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">        //到这里就来到了整个token方法的核心，这一步会生成token，这里spring security设计的很好</span><br><span class="line">        //灵活性非常高，通过grantType为每个模式指定不同的TokenGranter，将生成token的操作</span><br><span class="line">        //委托给子类</span><br><span class="line">		OAuth2AccessToken token = getTokenGranter().grant(tokenRequest.getGrantType(), tokenRequest);</span><br><span class="line">		if (token == null) &#123;</span><br><span class="line">			throw new UnsupportedGrantTypeException(&quot;Unsupported grant type: &quot; + tokenRequest.getGrantType());</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		return getResponse(token);</span><br><span class="line"></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>总结一下,token模式，假如你未登录来访问这个接口，也会抛出异常。这个接口的登录是通过配置认证头来实现的，username配置clientId,password配置clientSecret.然后在UsernamePassword*Filter中捕获并注入principal。</p>
+<p>这里如果登录无误，就会进入到最重要的方法里，132行的grant中,然后进行生成token操作</p>
+<h4 id="然后看一下重要的组件"><a href="#然后看一下重要的组件" class="headerlink" title="然后看一下重要的组件"></a>然后看一下重要的组件</h4><blockquote>
+<p>上一章看完了，那么核心问题转化为了，spring security是怎么生成token的。而生成token的核心方法对应于org.springframework.security.oauth2.provider.TokenGranter这个接口的grant方法.接下来让我们看下这个方法，同时再去了解下spring security的核心组件吧。</p>
+</blockquote>
+<h5 id="TokenGranter"><a href="#TokenGranter" class="headerlink" title="TokenGranter"></a>TokenGranter</h5><blockquote>
+<p>话不多说，直接看代码</p>
+</blockquote>
+<p>首先看一下继承关系:<br><img src="/images/20200902_7.png" alt="7"><br>在上面的token模式中，grant方法默认会进入到AbstractTokenGranter的grant方法中，而假如我们需要自定义认证模式，一般做法也是去继承这个抽象的父类，比如MobileCodeTokenGranter</p>
+<p>因此直接看下这个自定义的MobileCodeTokenGranter的代码吧:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 自定义grant_type模式-手机号短信验证模式</span><br><span class="line"> * @author: yaohw</span><br><span class="line"> * @create: 2019-09-29 18:29</span><br><span class="line"> **/</span><br><span class="line">public class MobileCodeTokenGranter extends AbstractTokenGranter &#123;</span><br><span class="line"></span><br><span class="line">    //根据你grant_type参数的不同，这里最后会进入到不同的tokenGranter</span><br><span class="line">    //因此如果需要自定义认证模式，一定要修改这个参数</span><br><span class="line">    private static final String GRANT_TYPE = &quot;mobile&quot;;</span><br><span class="line"></span><br><span class="line">    private final AuthenticationManager authenticationManager;</span><br><span class="line"></span><br><span class="line">    public MobileCodeTokenGranter(AuthenticationManager authenticationManager,</span><br><span class="line">                                  AuthorizationServerTokenServices tokenServices, ClientDetailsService clientDetailsService, OAuth2RequestFactory requestFactory) &#123;</span><br><span class="line">        this(authenticationManager, tokenServices, clientDetailsService, requestFactory, GRANT_TYPE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected OAuth2Authentication getOAuth2Authentication(ClientDetails client, TokenRequest tokenRequest) &#123;</span><br><span class="line">    </span><br><span class="line">        //将参数组装为MobileCodeAuthenticationToken</span><br><span class="line">        Map&lt;String, String&gt; parameters = new LinkedHashMap&lt;String, String&gt;(tokenRequest.getRequestParameters());</span><br><span class="line">        String mobile = parameters.get(&quot;mobile&quot;);</span><br><span class="line">        String code = parameters.get(&quot;code&quot;);</span><br><span class="line"></span><br><span class="line">        Authentication userAuth = new MobileCodeAuthenticationToken(mobile,code);</span><br><span class="line">        ((AbstractAuthenticationToken) userAuth).setDetails(parameters);</span><br><span class="line">        try &#123;</span><br><span class="line">            //最后将这个MobileCodeAuthenticationToken交给authenticationManager来认证</span><br><span class="line">            userAuth = authenticationManager.authenticate(userAuth);</span><br><span class="line">        &#125;</span><br><span class="line">        ......</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>因此认证的核心方法最后交给了AuthenticationManager这个类，而这个类又是通过与其他的组件交互，最后完成认证的:</p>
+<blockquote>
+<p>下面的内容建议直接看该博客:<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/7b87ec108405">https://www.jianshu.com/p/7b87ec108405</a><br><img src="/images/20200902_8.png" alt="8"></p>
+</blockquote>
+<p>简单的说就是，spring security通过不同的grantType,将颁发token的操作委托给了TokenGranter。</p>
+<p>而TokenGranter通过将不同的登录参数组装为不同的token，然后将token委托给AuthenticationMnager来处理。</p>
+<p>AuthenticationManager根据不同的token类型，通过调用AuthenticationProvider接口的support方法来决定，将这个token委托给哪个provider处理，最后的主要校验逻辑都是由provider来实现的。</p>
+<h4 id="spring-security-oauth-认证服务器"><a href="#spring-security-oauth-认证服务器" class="headerlink" title="spring security oauth 认证服务器"></a>spring security oauth 认证服务器</h4><blockquote>
+<p>说到底oauth-server其实就是在spring-security的基础上增加了两个入口和一系列过滤器还有上面这些认证组件，两个入口和这些认证组件上面已经分析过了。剩下的核心其实还是spring-security，通过这一系列的过滤器，spring 完成了一系列鉴权与跳转操作，同时为我们预留了很多接口，方便我们自定义</p>
+</blockquote>
+<p>spring security 本身并不复杂，它的核心原理可以用这张图和三局话概括:</p>
+<ul>
+<li>整个框架的核心是一个过滤器，这个过滤器名字叫springSecurityFilterChain类型是FilterChainProxy</li>
+<li>核心过滤器里面是过滤器链（列表），过滤器链的每个元素都是一组URL对应一组过滤器</li>
+<li>WebSecurity用来创建FilterChainProxy过滤器，HttpSecurity用来创建过滤器链的每个元素。</li>
+</ul>
+<p><img src="/images/20200902_9.png" alt="9"></p>
+<p>如果想仔细了解，推荐这个博客，上面三句话也是来自这个博客的: <a target="_blank" rel="noopener" href="https://blog.csdn.net/zimou5581/article/details/102457672">https://blog.csdn.net/zimou5581/article/details/102457672</a></p>
+<p>另外spring security提供了非常多的过滤器，如果想要了解的话，可以看这个博客:<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1551517">https://cloud.tencent.com/developer/article/1551517</a></p>
+<h4 id="内网的auth-server-和-client-的项目结构和改造思路，以及如何配置使用"><a href="#内网的auth-server-和-client-的项目结构和改造思路，以及如何配置使用" class="headerlink" title="内网的auth-server 和 client 的项目结构和改造思路，以及如何配置使用"></a>内网的auth-server 和 client 的项目结构和改造思路，以及如何配置使用</h4><p>参见内网文档 以及 代码注释</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://magikarpll.com/2021/09/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E4%B9%8Bspring-security-oauth%EF%BC%88%E4%BA%8C%EF%BC%89/" data-id="ckt1qkaw0000a0cvr4pbrdr7w" data-title="微服务认证方案设计之spring-security-oauth（二）" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/09/01/%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E7%BB%9F%E4%B8%80%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">信息系统中的统一身份认证与授权（一）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">August 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/09/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E4%B9%8Bspring-security-oauth%EF%BC%88%E4%BA%8C%EF%BC%89/">微服务认证方案设计之spring-security-oauth（二）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/09/01/%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E7%BB%9F%E4%B8%80%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/">信息系统中的统一身份认证与授权（一）</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/17/%E5%B7%A5%E4%BD%9C%E5%87%86%E5%A4%87/">工作准备</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/17/%E4%BA%8C%E5%8D%81%E4%B8%8D%E6%83%91/">二十不惑</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/17/%E5%86%99%E5%9C%A82020%E5%B9%B4%E7%9A%84%E8%AF%9D/">写在2020年的话</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 MagikarpLL<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
